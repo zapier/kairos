@@ -14,6 +14,7 @@ import pymongo
 from pymongo import ASCENDING, DESCENDING
 from datetime import datetime
 
+import six
 from six.moves.urllib.parse import urlparse
 
 
@@ -94,7 +95,7 @@ class MongoBackend(Timeseries):
     Recursively unescape values. Though slower, this doesn't require the user to
     know anything about the escaping when writing their own custom fetch functions.
     '''
-    if isinstance(value, (str,unicode)):
+    if isinstance(value, six.string_types):
       return value.replace(self._escape_character, '.')
     elif isinstance(value, dict):
       return { self._unescape(k) : self._unescape(v) for k,v in value.items() }
@@ -192,7 +193,7 @@ class MongoBackend(Timeseries):
 
     # need to hide the period of any values. best option seems to be to pick
     # a character that "no one" uses.
-    if isinstance(value, (str,unicode)):
+    if isinstance(value, six.string_types):
       value = value.replace('.', self._escape_character)
     elif isinstance(value, float):
       value = str(value).replace('.', self._escape_character)

@@ -102,7 +102,7 @@ class RelativeTime(object):
     '''
     start_bucket = self.to_bucket(start)
     end_bucket = self.to_bucket(end)
-    return range(start_bucket, end_bucket+1)
+    return list(range(start_bucket, end_bucket+1))
 
   def normalize(self, timestamp, steps=0):
     '''
@@ -268,22 +268,23 @@ class TimeseriesMeta(type):
   Meta class for URL parsing
   '''
   def __call__(cls, client, **kwargs):
-    if isinstance(client, (str,unicode)):
+    if isinstance(client, six.string_types):
       for backend in BACKENDS.values():
         handle = backend.url_parse(client, **kwargs.pop('client_config',{}))
         if handle:
           client = handle
           break
-    if isinstance(client, (str,unicode)):
+    if isinstance(client, six.string_types):
       raise ImportError("Unsupported or unknown client type for %s", client)
     return type.__call__(cls, client, **kwargs)
 
+
+@six.add_metaclass(TimeseriesMeta)
 class Timeseries(object):
   '''
   Base class of all time series. Also acts as a factory to return the correct
   subclass if "type=" keyword argument supplied.
   '''
-  __metaclass__ = TimeseriesMeta
 
   def __new__(cls, client, **kwargs):
     if cls==Timeseries:
@@ -822,7 +823,7 @@ class Series(Timeseries):
 
   def _process_row(self, data):
     if self._read_func:
-      return map(self._read_func, data)
+      return list(map(self._read_func, data))
     return data
 
   def _condense(self, data):
@@ -830,7 +831,7 @@ class Series(Timeseries):
     Condense by adding together all of the lists.
     '''
     if data:
-      return reduce(operator.add, data.values())
+      return six.moves.reduce(operator.add, data.values())
     return []
 
   def _join(self, rows):
@@ -973,7 +974,7 @@ class Gauge(Timeseries):
     Condense by returning the last real value of the gauge.
     '''
     if data:
-      data = filter(None,data.values())
+      data = list(filter(None,data.values()))
       if data:
         return data[-1]
     return None
@@ -1028,7 +1029,7 @@ class Set(Timeseries):
     Condense by or-ing all of the sets.
     '''
     if data:
-      return reduce(operator.ior, data.values())
+      return six.moves.reduce(operator.ior, data.values())
     return set()
 
   def _join(self, rows):
