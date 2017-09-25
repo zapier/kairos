@@ -14,25 +14,17 @@ from datetime import time as time_type
 from decimal import Decimal
 import re
 
+import six
 from six.moves.queue import Queue, Empty, Full
 from six.moves.urllib.parse import urlparse
 
-# Test python3 compatibility
-try:
-  x = long(1)
-except NameError:
-  long = int
-try:
-  x = unicode('foo')
-except NameError:
-  unicode = str
 
 TYPE_MAP = {
   str         : 'ascii',
   'str'       : 'ascii',
   'string'    : 'ascii',
 
-  unicode     : 'text',  # works for py3 too
+  six.text_type     : 'text',  # works for py3 too
   'unicode'   : 'text',
 
   float       : 'float',
@@ -44,7 +36,6 @@ TYPE_MAP = {
   'int'       : 'int',
   'integer'   : 'int',
 
-  long        : 'varint', # works for py3 too
   'long'      : 'varint',
   'int64'     : 'bigint',
 
@@ -60,6 +51,9 @@ TYPE_MAP = {
 
   'inet'      : 'inet',
 }
+if six.PY3:
+  long = int
+TYPE_MAP[long] = 'varint'
 
 QUOTE_TYPES = set(['ascii','text','blob'])
 QUOTE_MATCH = re.compile("^'.*'$")

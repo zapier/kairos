@@ -18,7 +18,9 @@ if sys.version_info[:2] > (2, 6):
 else:
     from ordereddict import OrderedDict
 
+import six
 from monthdelta import MonthDelta
+
 
 BACKENDS = {}
 
@@ -35,11 +37,9 @@ SIMPLE_TIMES = {
 
 GREGORIAN_TIMES = set(['daily', 'weekly', 'monthly', 'yearly'])
 
-# Test python3 compatibility
-try:
-  x = long(1)
-except NameError:
+if six.PY3:
   long = int
+
 
 def _resolve_time(value):
   '''
