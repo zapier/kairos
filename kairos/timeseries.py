@@ -297,7 +297,7 @@ class Timeseries(object):
         return backend( client, **kwargs )
 
       raise ImportError("Unsupported or unknown client type %s", client_module)
-    return object.__new__(cls, client, **kwargs)
+    return object.__new__(cls)
 
   def __init__(self, client, **kwargs):
     '''
