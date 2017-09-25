@@ -11,6 +11,7 @@ import sys
 import time
 import re
 
+import six
 from redis import Redis
 from six.moves.urllib.parse import urlparse
 
@@ -112,8 +113,8 @@ class RedisBackend(Timeseries):
       own_pipe = True
 
     ttl_batch = set()
-    for timestamp,names in inserts.iteritems():
-      for name,values in names.iteritems():
+    for timestamp,names in six.iteritems(inserts):
+      for name,values in six.iteritems(names):
         for value in values:
           # TODO: support config param to flush the pipe every X inserts
           self._insert( name, value, timestamp, intervals, ttl_batch=ttl_batch, **kwargs )
@@ -133,7 +134,7 @@ class RedisBackend(Timeseries):
     else:
       pipe = self._client.pipeline(transaction=False)
 
-    for interval,config in self._intervals.iteritems():
+    for interval,config in six.iteritems(self._intervals):
       timestamps = self._normalize_timestamps(timestamp, intervals, config)
       for tstamp in timestamps:
         self._insert_data(name, value, tstamp, interval, config, pipe,

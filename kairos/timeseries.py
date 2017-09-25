@@ -434,8 +434,8 @@ class Timeseries(object):
     if None in inserts:
       inserts[ time.time() ] = inserts.pop(None)
     if self._write_func:
-      for timestamp,names in inserts.iteritems():
-        for name,values in names.iteritems():
+      for timestamp,names in six.iteritems(inserts):
+        for name,values in six.iteritems(names):
           names[name] = [ self._write_func(v) for v in values ]
     self._batch_insert(inserts, intervals, **kwargs)
 
@@ -479,8 +479,8 @@ class Timeseries(object):
     Support for batch insert. Default implementation is non-optimized and
     is a simple loop over values.
     '''
-    for timestamp,names in inserts.iteritems():
-      for name,values in names.iteritems():
+    for timestamp,names in six.iteritems(inserts):
+      for name,values in six.iteritems(names):
         for value in values:
           self._insert( name, value, timestamp, intervals, **kwargs )
 

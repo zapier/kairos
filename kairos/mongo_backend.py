@@ -134,9 +134,9 @@ class MongoBackend(Timeseries):
     updates = {}
     # TODO support flush interval
     for interval,config in self._intervals.items():
-      for timestamp,names in inserts.iteritems():
+      for timestamp,names in six.iteritems(inserts):
         timestamps = self._normalize_timestamps(timestamp, intervals, config)
-        for name,values in names.iteritems():
+        for name,values in six.iteritems(names):
           for value in values:
             for tstamp in timestamps:
               query,insert = self._insert_data(
@@ -313,7 +313,7 @@ class MongoHistogram(MongoBackend, Histogram):
     if not existing:
       return insert
 
-    for value,incr in insert['$inc'].iteritems():
+    for value,incr in six.iteritems(insert['$inc']):
       existing['$inc'][value] = existing['$inc'].get(value,0)+incr
     return existing
 
