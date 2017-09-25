@@ -3,6 +3,8 @@ Copyright (c) 2012-2017, Agora Games, LLC All rights reserved.
 
 https://github.com/agoragames/kairos/blob/master/LICENSE.txt
 '''
+from __future__ import division
+
 from .exceptions import *
 
 from datetime import datetime, timedelta
@@ -88,7 +90,7 @@ class RelativeTime(object):
     '''
     Calculate the bucket from a timestamp, optionally including a step offset.
     '''
-    return int( timestamp / self._step ) + steps
+    return int( timestamp // self._step ) + steps
 
   def from_bucket(self, bucket):
     '''
@@ -251,7 +253,7 @@ class GregorianTime(object):
         # Convert to number of days
         day_diff = (self.from_bucket(ntime, native=True) - self.from_bucket(rtime, native=True)).days
         # Convert steps to number of days as well
-        step_diff = (steps*SIMPLE_TIMES[self._step[0]]) / SIMPLE_TIMES['d']
+        step_diff = (steps*SIMPLE_TIMES[self._step[0]]) // SIMPLE_TIMES['d']
 
         # The relative time is beyond our TTL cutoff
         if day_diff > step_diff:
@@ -806,7 +808,7 @@ class Series(Timeseries):
     if transform=='mean':
       total = sum( data )
       count = len( data )
-      data = float(total)/float(count) if count>0 else 0
+      data = total / float(count) if count>0 else 0
     elif transform=='count':
       data = len( data )
     elif transform=='min':
