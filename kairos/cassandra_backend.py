@@ -12,9 +12,10 @@ import time
 from datetime import date, datetime
 from datetime import time as time_type
 from decimal import Decimal
-from Queue import Queue, Empty, Full
 import re
-from urlparse import *
+
+from six.moves.queue import Queue, Empty, Full
+from six.moves.urllib.parse import urlparse
 
 # Test python3 compatibility
 try:

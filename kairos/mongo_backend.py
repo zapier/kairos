@@ -13,7 +13,9 @@ import re
 import pymongo
 from pymongo import ASCENDING, DESCENDING
 from datetime import datetime
-from urlparse import *
+
+from six.moves.urllib.parse import urlparse
+
 
 class MongoBackend(Timeseries):
   '''

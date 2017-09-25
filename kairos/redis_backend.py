@@ -10,8 +10,10 @@ import operator
 import sys
 import time
 import re
-from urlparse import *
+
 from redis import Redis
+from six.moves.urllib.parse import urlparse
+
 
 class RedisBackend(Timeseries):
   '''

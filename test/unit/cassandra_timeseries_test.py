@@ -1,7 +1,7 @@
 '''
 Functional tests for cassandra timeseries
 '''
-from Queue import Queue, Empty, Full
+from six.moves.queue import Queue, Empty, Full
 
 import cql
 from chai import Chai
