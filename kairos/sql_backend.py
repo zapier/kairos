@@ -14,24 +14,17 @@ import time
 from datetime import date, datetime
 from datetime import time as time_type
 from decimal import Decimal
-from urlparse import *
 
-# Test python3 compatibility
-try:
-  x = long(1)
-except NameError:
-  long = int
-try:
-  x = unicode('foo')
-except NameError:
-  unicode = str
+import six
+from six.moves.urllib.parse import urlparse
+
 
 TYPE_MAP = {
   str         : String,
   'str'       : String,
   'string'    : String,
 
-  unicode     : Unicode,  # works for py3 too
+  six.text_type : Unicode,  # works for py3 too
   'unicode'   : Unicode,
 
   float       : Float,
@@ -41,7 +34,6 @@ TYPE_MAP = {
   'int'       : Integer,
   'integer'   : Integer,
 
-  long        : BigInteger, # works for py3 too
   'long'      : BigInteger,
   'int64'     : BigInteger,
 
@@ -63,6 +55,11 @@ TYPE_MAP = {
   'clob'      : Text,
   'blob'      : LargeBinary,
 }
+
+if six.PY3:
+  long = int
+TYPE_MAP[long] = BigInteger
+
 
 class SqlBackend(Timeseries):
 

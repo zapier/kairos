@@ -3,6 +3,8 @@ Copyright (c) 2012-2017, Agora Games, LLC All rights reserved.
 
 https://github.com/agoragames/kairos/blob/master/LICENSE.txt
 '''
+from __future__ import division
+
 from .exceptions import *
 
 from datetime import datetime, timedelta
@@ -18,7 +20,9 @@ if sys.version_info[:2] > (2, 6):
 else:
     from ordereddict import OrderedDict
 
+import six
 from monthdelta import MonthDelta
+
 
 BACKENDS = {}
 
@@ -35,11 +39,9 @@ SIMPLE_TIMES = {
 
 GREGORIAN_TIMES = set(['daily', 'weekly', 'monthly', 'yearly'])
 
-# Test python3 compatibility
-try:
-  x = long(1)
-except NameError:
+if six.PY3:
   long = int
+
 
 def _resolve_time(value):
   '''
@@ -88,7 +90,7 @@ class RelativeTime(object):
     '''
     Calculate the bucket from a timestamp, optionally including a step offset.
     '''
-    return int( timestamp / self._step ) + steps
+    return int( timestamp // self._step ) + steps
 
   def from_bucket(self, bucket):
     '''
@@ -102,7 +104,7 @@ class RelativeTime(object):
     '''
     start_bucket = self.to_bucket(start)
     end_bucket = self.to_bucket(end)
-    return range(start_bucket, end_bucket+1)
+    return list(range(start_bucket, end_bucket+1))
 
   def normalize(self, timestamp, steps=0):
     '''
@@ -251,7 +253,7 @@ class GregorianTime(object):
         # Convert to number of days
         day_diff = (self.from_bucket(ntime, native=True) - self.from_bucket(rtime, native=True)).days
         # Convert steps to number of days as well
-        step_diff = (steps*SIMPLE_TIMES[self._step[0]]) / SIMPLE_TIMES['d']
+        step_diff = (steps*SIMPLE_TIMES[self._step[0]]) // SIMPLE_TIMES['d']
 
         # The relative time is beyond our TTL cutoff
         if day_diff > step_diff:
@@ -268,22 +270,23 @@ class TimeseriesMeta(type):
   Meta class for URL parsing
   '''
   def __call__(cls, client, **kwargs):
-    if isinstance(client, (str,unicode)):
+    if isinstance(client, six.string_types):
       for backend in BACKENDS.values():
         handle = backend.url_parse(client, **kwargs.pop('client_config',{}))
         if handle:
           client = handle
           break
-    if isinstance(client, (str,unicode)):
+    if isinstance(client, six.string_types):
       raise ImportError("Unsupported or unknown client type for %s", client)
     return type.__call__(cls, client, **kwargs)
 
+
+@six.add_metaclass(TimeseriesMeta)
 class Timeseries(object):
   '''
   Base class of all time series. Also acts as a factory to return the correct
   subclass if "type=" keyword argument supplied.
   '''
-  __metaclass__ = TimeseriesMeta
 
   def __new__(cls, client, **kwargs):
     if cls==Timeseries:
@@ -294,7 +297,7 @@ class Timeseries(object):
         return backend( client, **kwargs )
 
       raise ImportError("Unsupported or unknown client type %s", client_module)
-    return object.__new__(cls, client, **kwargs)
+    return object.__new__(cls)
 
   def __init__(self, client, **kwargs):
     '''
@@ -431,8 +434,8 @@ class Timeseries(object):
     if None in inserts:
       inserts[ time.time() ] = inserts.pop(None)
     if self._write_func:
-      for timestamp,names in inserts.iteritems():
-        for name,values in names.iteritems():
+      for timestamp,names in six.iteritems(inserts):
+        for name,values in six.iteritems(names):
           names[name] = [ self._write_func(v) for v in values ]
     self._batch_insert(inserts, intervals, **kwargs)
 
@@ -476,8 +479,8 @@ class Timeseries(object):
     Support for batch insert. Default implementation is non-optimized and
     is a simple loop over values.
     '''
-    for timestamp,names in inserts.iteritems():
-      for name,values in names.iteritems():
+    for timestamp,names in six.iteritems(inserts):
+      for name,values in six.iteritems(names):
         for value in values:
           self._insert( name, value, timestamp, intervals, **kwargs )
 
@@ -805,7 +808,7 @@ class Series(Timeseries):
     if transform=='mean':
       total = sum( data )
       count = len( data )
-      data = float(total)/float(count) if count>0 else 0
+      data = total / float(count) if count>0 else 0
     elif transform=='count':
       data = len( data )
     elif transform=='min':
@@ -822,7 +825,7 @@ class Series(Timeseries):
 
   def _process_row(self, data):
     if self._read_func:
-      return map(self._read_func, data)
+      return list(map(self._read_func, data))
     return data
 
   def _condense(self, data):
@@ -830,7 +833,7 @@ class Series(Timeseries):
     Condense by adding together all of the lists.
     '''
     if data:
-      return reduce(operator.add, data.values())
+      return six.moves.reduce(operator.add, data.values())
     return []
 
   def _join(self, rows):
@@ -973,7 +976,7 @@ class Gauge(Timeseries):
     Condense by returning the last real value of the gauge.
     '''
     if data:
-      data = filter(None,data.values())
+      data = list(filter(None,data.values()))
       if data:
         return data[-1]
     return None
@@ -1028,7 +1031,7 @@ class Set(Timeseries):
     Condense by or-ing all of the sets.
     '''
     if data:
-      return reduce(operator.ior, data.values())
+      return six.moves.reduce(operator.ior, data.values())
     return set()
 
   def _join(self, rows):

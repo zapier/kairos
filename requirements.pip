@@ -1,2 +1,4 @@
 # For calculating month deltas in gregorian systems
 MonthDelta==1.0b
+# Python 2/3 compatibility
+six==1.11.0

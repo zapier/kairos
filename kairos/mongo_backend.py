@@ -13,7 +13,10 @@ import re
 import pymongo
 from pymongo import ASCENDING, DESCENDING
 from datetime import datetime
-from urlparse import *
+
+import six
+from six.moves.urllib.parse import urlparse
+
 
 class MongoBackend(Timeseries):
   '''
@@ -92,7 +95,7 @@ class MongoBackend(Timeseries):
     Recursively unescape values. Though slower, this doesn't require the user to
     know anything about the escaping when writing their own custom fetch functions.
     '''
-    if isinstance(value, (str,unicode)):
+    if isinstance(value, six.string_types):
       return value.replace(self._escape_character, '.')
     elif isinstance(value, dict):
       return { self._unescape(k) : self._unescape(v) for k,v in value.items() }
@@ -131,9 +134,9 @@ class MongoBackend(Timeseries):
     updates = {}
     # TODO support flush interval
     for interval,config in self._intervals.items():
-      for timestamp,names in inserts.iteritems():
+      for timestamp,names in six.iteritems(inserts):
         timestamps = self._normalize_timestamps(timestamp, intervals, config)
-        for name,values in names.iteritems():
+        for name,values in six.iteritems(names):
           for value in values:
             for tstamp in timestamps:
               query,insert = self._insert_data(
@@ -190,7 +193,7 @@ class MongoBackend(Timeseries):
 
     # need to hide the period of any values. best option seems to be to pick
     # a character that "no one" uses.
-    if isinstance(value, (str,unicode)):
+    if isinstance(value, six.string_types):
       value = value.replace('.', self._escape_character)
     elif isinstance(value, float):
       value = str(value).replace('.', self._escape_character)
@@ -310,7 +313,7 @@ class MongoHistogram(MongoBackend, Histogram):
     if not existing:
       return insert
 
-    for value,incr in insert['$inc'].iteritems():
+    for value,incr in six.iteritems(insert['$inc']):
       existing['$inc'][value] = existing['$inc'].get(value,0)+incr
     return existing
 
